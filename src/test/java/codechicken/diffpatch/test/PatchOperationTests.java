@@ -248,6 +248,28 @@ public class PatchOperationTests {
         assertTrue(Files.exists(src.resolve("PatchFile.java")));
     }
 
+    @Test
+    public void testFolderToFolderDeletion() throws Throwable {
+        Path tempDir = Files.createTempDirectory("dir_test");
+        tempDir.toFile().deleteOnExit();
+        Path orig = tempDir.resolve("orig");
+        Path src = tempDir.resolve("src");
+        Path patches = tempDir.resolve("patches");
+        copyResource("/data/orig/A.txt", orig.resolve("A.txt"));
+        copyResource("/data/orig/B.txt", orig.resolve("B.txt"));
+        copyResource("/data/patches/A.txt.patch", patches.resolve("A.txt.patch"));
+        copyResource("/data/patches/B.txt.patch", patches.resolve("B.txt.patch"));
+        CliOperation.Result<PatchOperation.PatchesSummary> result = PatchOperation.builder()
+            .basePath(orig)
+            .outputPath(src)
+            .patchesPath(patches)
+            .build()
+            .operate();
+        assertEquals(0, result.exit);
+        assertTrue(Files.notExists(src.resolve("A.txt")));
+        assertTrue(Files.notExists(src.resolve("B.txt")));
+    }
+
     private static void copyResource(String resource, Path to) throws IOException {
         to = to.toAbsolutePath();
         Files.createDirectories(to.getParent());

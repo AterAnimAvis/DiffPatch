@@ -258,7 +258,7 @@ public class PatchOperation extends CliOperation<PatchOperation.PatchesSummary> 
         Map<String, PatchFile> patchFiles = pEntries.stream()
                 .map(e -> PatchFile.fromLines(e, pFunc.apply(e), true))
                 .collect(Collectors.toMap(e -> {
-                            if (e.patchedPath == null) {
+                            if (e.patchedPath == null || Objects.equals(e.patchedPath, "/dev/null")) {
                                 return e.name.substring(0, e.name.lastIndexOf(".patch"));
                             } else if (e.patchedPath.startsWith("b/")) {
                                 return e.patchedPath.substring(2);
@@ -353,7 +353,7 @@ public class PatchOperation extends CliOperation<PatchOperation.PatchesSummary> 
                 lines.add("");
             }
         }
-        outputCollector.consume(baseName, lines);
+        if (!Objects.equals(patchFile.patchedPath, "/dev/null")) outputCollector.consume(baseName, lines);
         if (!rejectLines.isEmpty()) {
             rejectCollector.consume(patchFile.name + ".rej", rejectLines);
             return false;

@@ -6,6 +6,7 @@ import codechicken.diffpatch.util.Utils;
 import codechicken.diffpatch.util.archiver.ArchiveFormat;
 import codechicken.diffpatch.util.archiver.ArchiveReader;
 import codechicken.diffpatch.util.archiver.ArchiveWriter;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -257,8 +258,8 @@ public class PatchOperationTests {
         Path patches = tempDir.resolve("patches");
         copyResource("/data/orig/A.txt", orig.resolve("A.txt"));
         copyResource("/data/orig/B.txt", orig.resolve("B.txt"));
-        copyResource("/data/patches/A.txt.patch", patches.resolve("A.txt.patch"));
-        copyResource("/data/patches/B.txt.patch", patches.resolve("B.txt.patch"));
+        copyResource("/data/patches/DeleteA.txt.patch", patches.resolve("A.txt.patch"));
+        copyResource("/data/patches/DeleteB.txt.patch", patches.resolve("B.txt.patch"));
         CliOperation.Result<PatchOperation.PatchesSummary> result = PatchOperation.builder()
             .basePath(orig)
             .outputPath(src)
@@ -268,6 +269,36 @@ public class PatchOperationTests {
         assertEquals(0, result.exit);
         assertTrue(Files.notExists(src.resolve("A.txt")));
         assertTrue(Files.notExists(src.resolve("B.txt")));
+    }
+
+    @Test
+    public void testFolderToFolderCreation() throws Throwable {
+        Path tempDir = Files.createTempDirectory("dir_test");
+        tempDir.toFile().deleteOnExit();
+
+        Path orig = tempDir.resolve("orig");
+        Files.createDirectories(orig);
+
+        Path src = tempDir.resolve("src");
+        Path patches = tempDir.resolve("patches");
+
+        copyResource("/data/patches/CreateA.txt.patch", patches.resolve("A.txt.patch"));
+        copyResource("/data/patches/CreateB.txt.patch", patches.resolve("B.txt.patch"));
+        CliOperation.Result<PatchOperation.PatchesSummary> result = PatchOperation.builder()
+            .basePath(orig)
+            .outputPath(src)
+            .patchesPath(patches)
+            // TEMP
+            .logTo(System.out)
+            .verbose(true)
+            // TEMP
+            .build()
+            .operate();
+        Assertions.assertAll(
+            () -> assertEquals(0, result.exit),
+            () -> assertTrue(Files.exists(src.resolve("A.txt"))),
+            () -> assertTrue(Files.exists(src.resolve("B.txt")))
+        );
     }
 
     private static void copyResource(String resource, Path to) throws IOException {

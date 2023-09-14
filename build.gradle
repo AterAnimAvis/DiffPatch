@@ -38,6 +38,10 @@ repositories {
     mavenLocal()
     jcenter()
     mavenCentral()
+    maven {
+        name = "Cover's Maven"
+        url = "https://nexus.covers1624.net/repository/maven-releases/"
+    }
 }
 
 sourceSets {
